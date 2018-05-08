@@ -7,15 +7,16 @@
     <script src="./static/js/jquery-3.3.1.min.js"></script>
 </head>
 <body>
-    <div id="game"></div>    
+    <div id="game"></div>
     <script>
         /* 牌 */
         var Card = function (options) {
             this.options = options
             this.index = this.options.index
             this.imgIndex = this.options.imgIndex
+            this.game = this.options.game
 
-            this.opened = false
+            this.matched = false
             
             this.initHtml()
             this.bindEvents()
@@ -29,18 +30,72 @@
             var self = this
             self.$card.on('click', function () {
                 console.log('点击了:', self.index)
-                self.opened = !self.opened
+                
+                // matched
+                if (self.$card.hasClass('matched')) {
+                    return
+                }
+                
+                self.$card.addClass('selected')
+                self.game.incrementClick()
+                if (self.game.firstCard) {
+                    // 图片相同
+                    if (self.game.randomImgs[self.index] === self.game.randomImgs[self.game.firstCard.index]) {
+                        self.game.matchedCards(self, self.game.firstCard)
+                    } else {
+                        setTimeout(function () {
+                            self.game.firstCard.$card.removeClass('selected')
+                            self.$card.removeClass('selected')
+                            self.game.firstCard = null                            
+                        }, 500);         
+                    }
+                } else {
+                    self.game.firstCard = self
+                }
+                self.game.checkSucceed()
             })
         }
 
         var CardGame = function (element) {
             this.$element = $(element)
-            this.cards = []
-            this.cardsPair = this.randomImgs()  // 存储两两相对的图片 index
-            console.log('cardsPair', this.cardsPair)
+            this.cards = [] // 所有 card 对象
+            this.randomImgs = this.randomImgs()  // 存储两两相对的图片 imgIndex
+            this.firstCard = null // 第一张牌
+            this.totalClick = 0 // 总共点击次数
+            this.succeed = false // 游戏成功
 
             this.initCards()
             this.render()
+        }
+        CardGame.prototype.matchedCards = function (card1, card2) {
+            var self = this
+
+            card1.$card.removeClass('selected').addClass('matched')
+            card2.$card.removeClass('selected').addClass('matched')
+            card1.matched = true
+            card2.matched = true
+            self.firstCard = null
+        }        
+        CardGame.prototype.checkSucceed = function () {
+            var self = this
+            var flag = true
+            self.cards.forEach(function (card) {
+                if (!card.matched) {
+                    flag = false
+                }
+            })
+            self.succeed = flag
+            if (self.succeed) {
+                setTimeout(function () {
+                    alert('游戏成功，总共点击：' + self.totalClick + '次')
+                }, 500)
+            }
+        }
+        CardGame.prototype.incrementClick = function () {
+            var self = this
+            self.totalClick += 1
+            console.log("self.$element.find('.total-click')", self.$element.find('.total-click'))
+            self.$element.find('.total-click').text('总共点击：' + self.totalClick + '次')
         }
         CardGame.prototype.randomImgs = function () {
             var self = this
@@ -69,8 +124,8 @@
         }
         CardGame.prototype.initCards = function () {
             var self = this
-            self.cardsPair.forEach(function (imgIndex, index) {
-                self.cards.push(new Card({index: index, imgIndex: imgIndex}))
+            self.randomImgs.forEach(function (imgIndex, index) {
+                self.cards.push(new Card({index: index, imgIndex: imgIndex, game: self}))
             })
         }
         CardGame.prototype.render = function () {
@@ -78,6 +133,7 @@
             self.cards.forEach(function (card) {
                 self.$element.append(card.$card)
             })
+            self.$element.append('<div class="total-click">总共点击: 0 次<div>')
         }
 
         var __main = function () {
