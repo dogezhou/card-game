@@ -45,10 +45,12 @@
                     if (self.game.randomImgs[self.index] === self.game.randomImgs[self.game.firstCard.index]) {
                         self.game.matchedCards(self, self.game.firstCard)
                     } else {
+                        // 缓存 firstCard ，可能被修改
+                        var firstCard = self.game.firstCard
+                        self.game.firstCard = null
                         setTimeout(function () {
-                            self.game.firstCard.$card.removeClass('selected')
-                            self.$card.removeClass('selected')
-                            self.game.firstCard = null                            
+                            firstCard.$card.removeClass('selected')
+                            self.$card.removeClass('selected')                            
                         }, 500);         
                     }
                 } else {
