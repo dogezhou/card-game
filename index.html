@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>翻牌游戏</title>
+    <link rel="stylesheet" href="./static/css/style.css">
+    <script src="./static/js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+    <div id="game"></div>    
+    <script>
+        /* 牌 */
+        var Card = function (options) {
+            this.options = options
+            this.index = this.options.index
+            this.imgIndex = this.options.imgIndex
+
+            this.opened = false
+            
+            this.initHtml()
+            this.bindEvents()
+        }
+        Card.prototype.initHtml = function () {
+            var self = this
+            var ele = '<div class="card-container"><i class="card card-' + self.imgIndex + '"></i></div>'
+            self.$card = $(ele)
+        }
+        Card.prototype.bindEvents = function () {
+            var self = this
+            self.$card.on('click', function () {
+                console.log('点击了:', self.index)
+                self.opened = !self.opened
+            })
+        }
+
+        var CardGame = function (element) {
+            this.$element = $(element)
+            this.cards = []
+            this.cardsPair = this.randomImgs()  // 存储两两相对的图片 index
+            console.log('cardsPair', this.cardsPair)
+
+            this.initCards()
+            this.render()
+        }
+        CardGame.prototype.randomImgs = function () {
+            var self = this
+            
+            // 1. 20 中选随机 8 个数
+            var nums = []
+            var i = 0
+            while(i < 8) {
+                var j = Math.floor(Math.random() * 20) + 1
+                if (nums.indexOf(j) === -1) {
+                    nums.push(j)
+                    i++
+                }
+            }
+            // 2. 两倍大小
+            nums = nums.concat(nums)
+            // 3. 打乱
+            for (var index = 0; index < nums.length; index++) {
+                var a = Math.floor(Math.random() * nums.length)
+				var b = Math.floor(Math.random() * nums.length)
+				var temp = nums[a]
+				nums[a] = nums[b]
+				nums[b] = temp         
+            }
+            return nums
+        }
+        CardGame.prototype.initCards = function () {
+            var self = this
+            self.cardsPair.forEach(function (imgIndex, index) {
+                self.cards.push(new Card({index: index, imgIndex: imgIndex}))
+            })
+        }
+        CardGame.prototype.render = function () {
+            var self = this
+            self.cards.forEach(function (card) {
+                self.$element.append(card.$card)
+            })
+        }
+
+        var __main = function () {
+            var game = new CardGame('#game')
+        }
+
+        __main()
+    </script>
+</body>
+</html>
